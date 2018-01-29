@@ -1,8 +1,9 @@
 :host {
   position: absolute;
-  top: 50px;
-  left: 50px;
-  height: 520px;
-  width: 436.5px;
+  left: calc(50% - 250px);
+  top: calc(50% - 250px);
+  height: 500px;
+  width: 500px;
   background-color: #F8F8F8;
+  border: 1px solid gray;
 }

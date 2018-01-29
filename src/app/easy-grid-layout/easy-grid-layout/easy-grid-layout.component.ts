@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { EasyGridLayoutService } from '../easy-grid-layout.service';
 
 @Component({
@@ -6,7 +6,7 @@ import { EasyGridLayoutService } from '../easy-grid-layout.service';
   templateUrl: './easy-grid-layout.component.html',
   styleUrls: ['./easy-grid-layout.component.scss']
 })
-export class EasyGridLayoutComponent implements OnInit {
+export class EasyGridLayoutComponent implements OnInit, AfterViewInit {
 
   constructor(private layoutService: EasyGridLayoutService) { }
 
@@ -14,4 +14,7 @@ export class EasyGridLayoutComponent implements OnInit {
     this.layoutService.animation = 500;
   }
 
+  ngAfterViewInit() {
+    this.layoutService.calculateLayoutEvent.emit();
+  }
 }

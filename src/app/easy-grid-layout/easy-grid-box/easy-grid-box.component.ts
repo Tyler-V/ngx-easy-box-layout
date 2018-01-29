@@ -1,7 +1,6 @@
-import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, Renderer2, ElementRef, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 import { DragEvent } from '../directives/drag.directive';
-import { Renderer2 } from '@angular/core';
 
 import { EasyGridLayoutService } from '../easy-grid-layout.service';
 
@@ -12,19 +11,26 @@ import { EasyGridLayoutService } from '../easy-grid-layout.service';
 })
 export class EasyGridBoxComponent implements OnInit {
 
-  @ViewChild('box') box: ElementRef;
+  @Input() width: number;
+  @Input() height: number;
+  @Input() top: number;
+  @Input() left: number;
 
-  public width;
-  public height = 80;
-  public top = '0%';
-  public left = 0;
+  @ViewChild('box') box: ElementRef;
 
   constructor(private layoutService: EasyGridLayoutService,
     private elementRef: ElementRef,
     private sanitizer: DomSanitizer,
     private renderer: Renderer2) { }
 
-  ngOnInit() { }
+  ngOnInit() {
+    this.layoutService.boxes.push({
+      top: this.top,
+      left: this.left,
+      width: this.width,
+      height: this.height
+    });
+  }
 
   onDrag(event: DragEvent) {
     this.renderer.setStyle(this.box.nativeElement, 'transform', `translate3d(${event.left}px, ${event.top}px, 0)`);
@@ -37,9 +43,4 @@ export class EasyGridBoxComponent implements OnInit {
       this.renderer.removeStyle(this.box.nativeElement, 'transition');
     }, this.layoutService.animation);
   }
-
-  calculateWidth() {
-    return this.sanitizer.bypassSecurityTrustStyle('calc( (100% - 8px * 4) / 5)');
-  }
-
 }
