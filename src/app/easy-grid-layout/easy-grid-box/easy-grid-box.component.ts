@@ -11,8 +11,8 @@ import { EasyGridLayoutService } from '../easy-grid-layout.service';
 })
 export class EasyGridBoxComponent implements OnInit {
 
-  @Input() width: number;
-  @Input() height: number;
+  @Input() width: number | string;
+  @Input() height: number | string;
   @Input() top: number;
   @Input() left: number;
 
@@ -23,14 +23,7 @@ export class EasyGridBoxComponent implements OnInit {
     private sanitizer: DomSanitizer,
     private renderer: Renderer2) { }
 
-  ngOnInit() {
-    this.layoutService.boxes.push({
-      top: this.top,
-      left: this.left,
-      width: this.width,
-      height: this.height
-    });
-  }
+  ngOnInit() { }
 
   onDrag(event: DragEvent) {
     this.renderer.setStyle(this.box.nativeElement, 'transform', `translate3d(${event.left}px, ${event.top}px, 0)`);
