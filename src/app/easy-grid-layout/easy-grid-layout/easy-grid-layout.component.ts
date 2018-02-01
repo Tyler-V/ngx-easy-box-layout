@@ -18,57 +18,71 @@ export class EasyGridLayoutComponent implements OnInit, AfterContentInit {
 
   ngOnInit() {
     this.layoutService.animation = 500;
-    this.layoutService.container = this.elementRef;
   }
 
   ngAfterContentInit() {
-    let left = 0, top = 0;
-    this.boxes.forEach(box => {
-      box.left = left;
-      box.top = top;
-      left += this.calculateWidth(box);
-      if (left >= this.layoutService.container.nativeElement.clientWidth) {
-        top += Number(box.height);
-        left = 0;
-      }
-      if (!this.isLastInRow(box)) {
-        // left += Number(this.gutter);
-      }
-    });
+    this.rowPack();
   }
 
-  private calculateWidth(box) {
-    switch (typeof box.width) {
-      case 'string':
-        return this.parseToDecimal(box.width) * this.layoutService.container.nativeElement.clientWidth;
-      case 'number':
+  private rowPack() {
+    const packed: Number[][] = [];
+    let left = 0, row = 0;
+    for (let i = 0; i < this.boxes.length; i++) {
+      const box: EasyGridBoxComponent = this.boxes.find((item, index, array) => index === i);
+      if (packed[row] === undefined) {
+        packed[row] = [];
+      }
+      packed[row].push(i);
+      left += this.calculateLeft(box);
+      if (left >= this.getContainerWidth()) {
+        row++;
+      }
+    }
+    console.log(packed);
+    this.sizeBoxes(packed);
+  }
+
+  private sizeBoxes(packed) {
+    let left = 0, top = 0;
+    for (let i = 0; i < packed.length; i++) {
+      const gutter = 10;
+      const gutterWidth = (packed[i].length - 1) * gutter;
+      const containerWidth = this.getContainerWidth() - gutterWidth;
+      for (let j = 0; j < packed[i].length; j++) {
+        const box = this.getBox(j);
+        box.left = left;
+        // box.width = 'calc(25% - 7.5px)';
+        left += ((this.parseToDecimal(box.width) * containerWidth) + gutter);
+      }
+    }
+  }
+
+  private getBox(index: number): EasyGridBoxComponent {
+    return this.boxes.find((_item, _index, _array) => _index === index);
+  }
+
+  private calculateLeft(box) {
+    switch (this.getFormat(box.width)) {
+      case Format.Percent:
+        return this.parseToDecimal(box.width) * this.getContainerWidth();
+      case Format.Pixel:
         return box.width;
     }
   }
 
-  private calculateHeight(box) {
-    switch (typeof box.height) {
-      case 'string':
-        return this.parseToDecimal(box.height) * this.layoutService.container.nativeElement.clientHeight;
-      case 'number':
-        return box.height;
-    }
+  private getContainerWidth() {
+    return Math.round(this.elementRef.nativeElement.clientWidth);
   }
 
-  private parseToDecimal(str: string) {
-    return parseInt(str, 10) / 100;
+  private getFormat(value: string | number): Format {
+    return value.toString().includes('%') ? Format.Percent : Format.Pixel;
   }
 
-  private getWidth(width: string | number) {
-    switch (typeof width) {
-      case 'string':
-        return `${width}px`;
-      case 'number':
-        return width;
-    }
+  private parseToDecimal(value: string | number) {
+    return parseInt(String(value), 10) / 100;
   }
+}
 
-  private isLastInRow(box: EasyGridBoxComponent): boolean {
-    return box.left >= this.layoutService.container.nativeElement.clientWidth;
-  }
+export enum Format {
+  Pixel, Percent
 }

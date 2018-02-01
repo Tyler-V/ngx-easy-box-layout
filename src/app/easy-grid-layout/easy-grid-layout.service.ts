@@ -6,12 +6,13 @@ import { EasyGridBoxComponent } from './easy-grid-box/easy-grid-box.component';
 @Injectable()
 export class EasyGridLayoutService implements OnDestroy {
 
-  public animation;
-  @ViewChildren('box') components: QueryList<EasyGridBoxComponent>;
-  public container: ElementRef;
+  @ViewChildren('box') public components: QueryList<EasyGridBoxComponent>;
 
+  public animation;
   public calculateLayoutEvent = new EventEmitter<void>();
   public calculateLayoutSubscription: Subscription;
+
+  private container: ElementRef;
 
   constructor() {
     this.calculateLayoutSubscription = this.calculateLayoutEvent.subscribe(() => {
@@ -20,5 +21,9 @@ export class EasyGridLayoutService implements OnDestroy {
 
   ngOnDestroy() {
     this.calculateLayoutSubscription.unsubscribe();
+  }
+
+  public getContainerWidth() {
+    return this.container.nativeElement.clientWidth;
   }
 }
