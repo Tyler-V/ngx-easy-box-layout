@@ -1,6 +1,5 @@
 import { Injectable, EventEmitter, OnDestroy, ElementRef, ViewChildren, QueryList } from '@angular/core';
 import { Subscription } from 'rxjs/Subscription';
-import { GridBox } from './easy-grid-box/easy-grid-box';
 import { EasyGridBoxComponent } from './easy-grid-box/easy-grid-box.component';
 
 @Injectable()
@@ -21,9 +20,5 @@ export class EasyGridLayoutService implements OnDestroy {
 
   ngOnDestroy() {
     this.calculateLayoutSubscription.unsubscribe();
-  }
-
-  public getContainerWidth() {
-    return this.container.nativeElement.clientWidth;
   }
 }
