@@ -14,31 +14,24 @@ export class EasyGridBoxComponent implements OnInit {
 
   @Input() width: number | string;
   @Input() height: number | string;
-  @Input() top: number;
-  @Input() left: number;
 
   @ViewChild('box') box: ElementRef;
 
-  private _width: string;
-  private _height: string;
+  public _width: number;
+  public _height: number;
+  public _top: number;
+  public _left: number;
 
   constructor(private layoutService: EasyGridLayoutService,
     private elementRef: ElementRef,
     private sanitizer: DomSanitizer,
     private renderer: Renderer2) { }
 
-  ngOnInit() {
-    this._width = Utils.getDimension(this.width);
-    this._height = Utils.getDimension(this.height);
-  }
+  ngOnInit() { }
 
-  private setWidth(value: number | string) {
+  private setWidth(value: number | string) { }
 
-  }
-
-  public setHeight(value: number | string) {
-
-  }
+  public setHeight(value: number | string) { }
 
   private onDrag(event: DragEvent) {
     this.renderer.setStyle(this.box.nativeElement, 'transform', `translate3d(${event.left}px, ${event.top}px, 0)`);

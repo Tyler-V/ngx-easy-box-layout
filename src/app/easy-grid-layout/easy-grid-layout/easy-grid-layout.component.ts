@@ -11,116 +11,70 @@ import { Utils, Format } from '../util/utils.class';
 })
 export class EasyGridLayoutComponent implements OnInit, AfterContentInit {
 
-  @Input() spacing: number;
+  @Input() gutter: number;
 
   @ContentChildren(EasyGridBoxComponent) boxes: QueryList<EasyGridBoxComponent>;
 
   private packed: number[][] = [];
-  private columns = 0;
+  private containerWidth: number;
+  private containerHeight: number;
 
   constructor(private elementRef: ElementRef, private layoutService: EasyGridLayoutService) { }
 
   ngOnInit() {
     this.layoutService.animation = 500;
+    this.containerWidth = Math.round(this.elementRef.nativeElement.clientWidth);
+    this.containerHeight = Math.round(this.elementRef.nativeElement.clientHeight);
   }
 
   ngAfterContentInit() {
-    this.rowPack();
+    this.pack();
   }
 
-  private rowPack() {
+  private pack() {
     this.packed = [];
-    let left = 0, row = 0, columns = 0;
+    let left = 0, row = 0;
     for (let i = 0; i < this.boxes.length; i++) {
       const box: EasyGridBoxComponent = this.boxes.find((item, index, array) => index === i);
       if (this.packed[row] === undefined) {
         this.packed[row] = [];
       }
       this.packed[row].push(i);
-      columns++;
-
-      const containerWidth = Math.round(this.elementRef.nativeElement.clientWidth);
-      left += this.calculateLeft1(box, containerWidth);
-
-      if (left >= containerWidth) {
+      left += this.calculateWidth(box);
+      if (left >= this.containerWidth) {
+        left = 0;
         row++;
-        if (columns > this.columns) {
-          this.columns = columns;
-        }
-        columns = 0;
       }
     }
-    this.sizeBoxes();
+    console.log(this.packed);
+    this.position();
   }
 
-  private sizeBoxes() {
+  private position() {
     this.packed.forEach(row => {
-      row.forEach(index => {
-        const box = this.getBox(index);
-        box.width = this.calculateWidth(box);
-        box.left = this.calculateLeft(box);
-      });
+      let left = 0, top = 0;
+      const columns = row.length;
+      for (const i of row) {
+        const box = this.boxes.find((item, index, array) => index === i);
+        box._width = this.calculateWidth(box, columns);
+        box._left = left;
+        left += box._width + Number(this.gutter);
+      }
+      top += 0;
     });
   }
 
-  private calculateWidth(box) {
+  private calculateWidth(box, columns?: any) {
     switch (Utils.getFormat(box.width)) {
       case Format.Percent:
-        const percent = parseInt(box.width, 10);
-        return `calc(${percent}% - ${(this.spacing * this.columns - 1) / this.columns - 1}px)`;
-      case Format.Pixel:
-        return box.width;
-    }
-  }
-
-  private calculateLeft(box) {
-    switch (Utils.getFormat(box.width)) {
-      case Format.Percent:
-        const percent = parseInt(box.width, 10);
-        return `calc(${percent}% - ${(this.spacing * this.columns - 1) / this.columns - 1}px)`;
-      case Format.Pixel:
-        return box.width;
-    }
-  }
-
-  private sizeBoxes1() {
-    let top = 0;
-    for (let i = 0; i < this.packed.length; i++) {
-      let containerWidth = Math.round(this.elementRef.nativeElement.clientWidth);
-      if (this.spacing) {
-        containerWidth -= (this.packed[i].length - 1) * Number(this.spacing);
-      }
-      let left = 0;
-      for (let j = 0; j < this.packed[i].length; j++) {
-        const box = this.getBox(this.packed[i][j]);
-        const width = this.calculateWidth1(box, containerWidth);
-        box.width = `${width}px`;
-        box.left = left;
-        left += Number(width);
-        if (this.spacing) {
-          left += Number(this.spacing);
+        const percent = parseInt(box.width, 10) / 100;
+        let width = this.containerWidth * percent;
+        if (columns) {
+          width -= Number(this.gutter) * (columns - 1) / columns;
         }
-        box.top = top;
-      }
-      top += Number(this.getBox(this.packed[i][0]).height);
-    }
-  }
-
-  private calculateLeft1(box: EasyGridBoxComponent, containerWidth): number {
-    switch (Utils.getFormat(box.width)) {
-      case Format.Percent:
-        return Utils.parseToDecimal(String(box.width)) * containerWidth;
+        return width;
       case Format.Pixel:
-        return parseInt(String(box.width), 10);
-    }
-  }
-
-  private calculateWidth1(box, containerWidth) {
-    switch (Utils.getFormat(box.width)) {
-      case Format.Percent:
-        return Utils.parseToDecimal(box.width) * containerWidth;
-      case Format.Pixel:
-        return box.width;
+        return parseInt(box.width, 10);
     }
   }
 
