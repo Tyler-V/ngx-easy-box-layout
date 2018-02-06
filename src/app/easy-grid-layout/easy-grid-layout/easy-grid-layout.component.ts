@@ -16,6 +16,7 @@ export class EasyGridLayoutComponent implements OnInit, AfterContentInit {
   @ContentChildren(EasyGridBoxComponent) boxes: QueryList<EasyGridBoxComponent>;
 
   private packed: number[][] = [];
+  private boxSizes: Map<string, number> = new Map<string, number>();
   private containerWidth: number;
   private containerHeight: number;
 
@@ -40,7 +41,8 @@ export class EasyGridLayoutComponent implements OnInit, AfterContentInit {
         this.packed[row] = [];
       }
       this.packed[row].push(i);
-      left += this.calculateWidth(box);
+      box._width = this.getWidth(box);
+      left += box._width;
       if (left >= this.containerWidth) {
         left = 0;
         row++;
@@ -51,28 +53,40 @@ export class EasyGridLayoutComponent implements OnInit, AfterContentInit {
   }
 
   private position() {
+    let top = 0;
     this.packed.forEach(row => {
-      let left = 0, top = 0;
+      let left = 0;
       const columns = row.length;
       for (const i of row) {
         const box = this.boxes.find((item, index, array) => index === i);
-        box._width = this.calculateWidth(box, columns);
+        box._top = top;
         box._left = left;
+        box._width = this.getGutterWidth(box, columns);
         left += box._width + Number(this.gutter);
       }
-      top += 0;
+      top += 110;
     });
   }
 
-  private calculateWidth(box, columns?: any) {
+  private getWidth(box) {
     switch (Utils.getFormat(box.width)) {
       case Format.Percent:
-        const percent = parseInt(box.width, 10) / 100;
-        let width = this.containerWidth * percent;
-        if (columns) {
-          width -= Number(this.gutter) * (columns - 1) / columns;
+        return this.containerWidth * parseInt(box.width, 10) / 100;
+      case Format.Pixel:
+        return parseInt(box.width, 10);
+    }
+  }
+
+  private getGutterWidth(box, columns?: any): number {
+    switch (Utils.getFormat(box.width)) {
+      case Format.Percent:
+        if (this.boxSizes.has(box.width)) {
+          return this.boxSizes.get(box.width);
         }
-        return width;
+        const gutterWidth = Number(this.gutter) * (columns - 1) / columns;
+        box._width -= gutterWidth;
+        this.boxSizes.set(box.width, box._width);
+        return box._width;
       case Format.Pixel:
         return parseInt(box.width, 10);
     }
