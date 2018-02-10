@@ -30,15 +30,15 @@ export class EasyGridBoxComponent implements OnInit {
 
   ngOnInit() { }
 
-  private onDragStart() {
+  public onDragStart() {
     this.renderer.addClass(this.box.nativeElement, 'dragging');
   }
 
-  private onDragging(event: Position) {
+  public onDragging(event: Position) {
     this.renderer.setStyle(this.box.nativeElement, 'transform', `translate3d(${event.left}px, ${event.top}px, 0)`);
   }
 
-  private onDragEnd() {
+  public onDragEnd() {
     this.renderer.removeStyle(this.box.nativeElement, 'transform');
     this.renderer.setStyle(this.box.nativeElement, 'transition', `transform ${this.layoutService.animation}ms`);
     setTimeout(() => {

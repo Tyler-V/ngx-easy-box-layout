@@ -28,7 +28,7 @@ export class EasyGridLayoutComponent implements OnInit, AfterContentInit {
     this.layoutService.animation = 500;
     this.containerWidth = Math.round(this.elementRef.nativeElement.clientWidth);
     this.containerHeight = Math.round(this.elementRef.nativeElement.clientHeight);
-    this._gutter = this.calcGutterWidth(this.gutter);
+    this._gutter = this.calcGutter(this.gutter);
   }
 
   ngAfterContentInit() {
@@ -54,7 +54,7 @@ export class EasyGridLayoutComponent implements OnInit, AfterContentInit {
       left += box._width + this._gutter;
       if (left >= this.containerWidth) {
         left = 0;
-        top += 110;
+        top += box._height + this._gutter;
         row++;
       }
     }
@@ -81,7 +81,7 @@ export class EasyGridLayoutComponent implements OnInit, AfterContentInit {
     }
   }
 
-  private calcGutterWidth(gutter) {
+  private calcGutter(gutter) {
     switch (Utils.getFormat(gutter)) {
       case Format.Percent:
         return this.containerWidth * Utils.getNumber(gutter);
