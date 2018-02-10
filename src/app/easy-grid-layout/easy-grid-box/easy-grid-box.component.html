@@ -1,4 +1,4 @@
 <div #box class="ez-grid-box" [style.width.px]="_width" [style.height.px]="_height" [style.left.px]="_left" [style.top.px]="_top"
-  ezDrag (onDragStart)="onDragStart()" (onDragging)="onDragging($event)" (onDragEnd)="onDragEnd()">
+  ezDrag [lockInsideParent]="false" (onDragStart)="onDragStart()" (onDragging)="onDragging($event)" (onDragEnd)="onDragEnd()">
   <ng-content></ng-content>
 </div>

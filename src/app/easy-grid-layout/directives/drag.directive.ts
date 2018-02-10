@@ -13,8 +13,7 @@ import 'rxjs/add/operator/filter';
 })
 export class DragDirective implements OnDestroy {
 
-  @Input() movePadding = 50;
-  @Input() insideParent = true;
+  @Input() lockInsideParent: boolean;
   @Output() onDragStart = new EventEmitter();
   @Output() onDragging = new EventEmitter<Position>();
   @Output() onDragEnd = new EventEmitter();
@@ -94,7 +93,7 @@ export class DragDirective implements OnDestroy {
 
   private _calculatePosition(e: MouseEvent | TouchEvent): Position {
     const position: Position = this._getPosition(e);
-    if (this.insideParent) {
+    if (this.lockInsideParent) {
       // top
       const elementOffsetTop = this.elementRef.nativeElement.offsetTop;
       if (position.top + elementOffsetTop < 0) {
