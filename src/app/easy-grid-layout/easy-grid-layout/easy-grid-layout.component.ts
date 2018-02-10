@@ -11,12 +11,14 @@ import { Utils, Format } from '../util/utils.class';
 })
 export class EasyGridLayoutComponent implements OnInit, AfterContentInit {
 
-  @Input() gutter: number;
+  @Input() gutter: string;
+
+  private _gutter: number;
 
   @ContentChildren(EasyGridBoxComponent) boxes: QueryList<EasyGridBoxComponent>;
 
   private packed: number[][] = [];
-  private boxSizes: Map<string, number> = new Map<string, number>();
+  private boxWidth: Map<string, number> = new Map<string, number>();
   private containerWidth: number;
   private containerHeight: number;
 
@@ -26,6 +28,7 @@ export class EasyGridLayoutComponent implements OnInit, AfterContentInit {
     this.layoutService.animation = 500;
     this.containerWidth = Math.round(this.elementRef.nativeElement.clientWidth);
     this.containerHeight = Math.round(this.elementRef.nativeElement.clientHeight);
+    this._gutter = this.calcGutterWidth(this.gutter);
   }
 
   ngAfterContentInit() {
@@ -34,61 +37,58 @@ export class EasyGridLayoutComponent implements OnInit, AfterContentInit {
 
   private pack() {
     this.packed = [];
-    let left = 0, row = 0;
+    let left = 0, top = 0, row = 0;
     for (let i = 0; i < this.boxes.length; i++) {
-      const box: EasyGridBoxComponent = this.boxes.find((item, index, array) => index === i);
       if (this.packed[row] === undefined) {
         this.packed[row] = [];
       }
       this.packed[row].push(i);
-      box._width = this.getWidth(box);
-      left += box._width;
+
+      const box: EasyGridBoxComponent = this.boxes.find((item, index, array) => index === i);
+
+      box._left = left;
+      box._top = top;
+      box._height = this.calcBoxHeight(box);
+      box._width = this.calcBoxWidth(box);
+
+      left += box._width + this._gutter;
       if (left >= this.containerWidth) {
         left = 0;
+        top += 110;
         row++;
       }
     }
-    console.log(this.packed);
-    this.position();
   }
 
-  private position() {
-    let top = 0;
-    this.packed.forEach(row => {
-      let left = 0;
-      const columns = row.length;
-      for (const i of row) {
-        const box = this.boxes.find((item, index, array) => index === i);
-        box._top = top;
-        box._left = left;
-        box._width = this.getGutterWidth(box, columns);
-        left += box._width + Number(this.gutter);
-      }
-      top += 110;
-    });
-  }
-
-  private getWidth(box) {
+  private calcBoxWidth(box) {
     switch (Utils.getFormat(box.width)) {
       case Format.Percent:
-        return this.containerWidth * parseInt(box.width, 10) / 100;
+        const percent = Utils.getNumber(box.width);
+        const gutter = ((1 / percent) - 1) * this._gutter;
+        const width = (this.containerWidth - gutter) * percent;
+        return width;
       case Format.Pixel:
         return parseInt(box.width, 10);
     }
   }
 
-  private getGutterWidth(box, columns?: any): number {
-    switch (Utils.getFormat(box.width)) {
+  private calcBoxHeight(box) {
+    switch (Utils.getFormat(box.height)) {
       case Format.Percent:
-        if (this.boxSizes.has(box.width)) {
-          return this.boxSizes.get(box.width);
-        }
-        const gutterWidth = Number(this.gutter) * (columns - 1) / columns;
-        box._width -= gutterWidth;
-        this.boxSizes.set(box.width, box._width);
-        return box._width;
+        return this.containerHeight * Utils.getNumber(this.gutter);
       case Format.Pixel:
-        return parseInt(box.width, 10);
+        return parseInt(box.height, 10);
+    }
+  }
+
+  private calcGutterWidth(gutter) {
+    switch (Utils.getFormat(gutter)) {
+      case Format.Percent:
+        return this.containerWidth * Utils.getNumber(gutter);
+      case Format.Pixel:
+        return Utils.getNumber(gutter);
+      case Format.Number:
+        return Number(gutter);
     }
   }
 

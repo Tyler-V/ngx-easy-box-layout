@@ -1,5 +1,5 @@
 export class Utils {
-    public static getFormat(value: string | number): Format {
+    public static getFormat(value: string): Format {
         if (String(value).includes('%')) {
             return Format.Percent;
         } else if (String(value).includes('px')) {
@@ -9,12 +9,14 @@ export class Utils {
         }
     }
 
-    public static getDimension(value: string | number): string {
-        switch (this.getFormat(value)) {
+    public static getNumber(value: string): number {
+        switch (Utils.getFormat(value)) {
+            case Format.Percent:
+                return parseInt(value, 10) / 100;
+            case Format.Pixel:
+                return parseInt(value, 10);
             case Format.Number:
-                return `${value}px`;
-            default:
-                return String(value);
+                return typeof value === 'undefined' ? 0 : Number(value);
         }
     }
 

@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Renderer2, ElementRef, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
-import { DragEvent } from '../directives/drag.directive';
+import { Position } from '../directives/drag.directive';
 
 import { EasyGridLayoutService } from '../easy-grid-layout.service';
 import { Utils, Format } from '../util/utils.class';
@@ -12,8 +12,8 @@ import { Utils, Format } from '../util/utils.class';
 })
 export class EasyGridBoxComponent implements OnInit {
 
-  @Input() width: number | string;
-  @Input() height: number | string;
+  @Input() width: string;
+  @Input() height: string;
 
   @ViewChild('box') box: ElementRef;
 
@@ -22,18 +22,15 @@ export class EasyGridBoxComponent implements OnInit {
   public _top: number;
   public _left: number;
 
-  constructor(private layoutService: EasyGridLayoutService,
+  constructor(
+    private layoutService: EasyGridLayoutService,
     private elementRef: ElementRef,
     private sanitizer: DomSanitizer,
     private renderer: Renderer2) { }
 
   ngOnInit() { }
 
-  private setWidth(value: number | string) { }
-
-  public setHeight(value: number | string) { }
-
-  private onDrag(event: DragEvent) {
+  private onDrag(event: Position) {
     this.renderer.setStyle(this.box.nativeElement, 'transform', `translate3d(${event.left}px, ${event.top}px, 0)`);
   }
 

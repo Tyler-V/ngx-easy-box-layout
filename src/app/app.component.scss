@@ -1,9 +1,17 @@
-div {
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
-  text-align: center;
-  font-weight: bold;
-  font-size: 20px;
-  user-select: none;
+.container {
+  position: absolute;
+  margin: 25px;
+  height: calc(100% - 50px);
+  width: calc(100% - 50px);
+  max-width: 800px;
+  max-height: 800px;
+  div {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    user-select: none;
+  }
 }

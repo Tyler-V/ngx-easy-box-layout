@@ -1,91 +1,128 @@
-import { Directive, ElementRef, Input, Output, EventEmitter, HostListener, HostBinding, Renderer2, AfterViewInit } from '@angular/core';
+import {
+  Directive, OnDestroy, ElementRef, Input, Output, EventEmitter,
+  HostListener, HostBinding, Renderer2, AfterViewInit
+} from '@angular/core';
+import { Observable } from 'rxjs/Observable';
+import { Subscription } from 'rxjs/Subscription';
+import 'rxjs/add/observable/fromEvent';
+import 'rxjs/add/observable/merge';
+import 'rxjs/add/operator/filter';
 
 @Directive({
   selector: '[ezDrag]'
 })
-export class DragDirective {
+export class DragDirective implements OnDestroy {
 
   @Input() movePadding = 50;
-  @Input() insideParent: boolean;
-  @Output() onDrag = new EventEmitter<DragEvent>();
+  @Input() insideParent = true;
+  @Output() onDrag = new EventEmitter<Position>();
   @Output() onDragEnd = new EventEmitter();
 
-  private startEvent: any;
+  private dragStartSubscription: Subscription;
+  private dragSubscription: Subscription;
+  private dragEndSubscription: Subscription;
 
-  constructor(private elementRef: ElementRef, private renderer: Renderer2) { }
+  private _startEvent: MouseEvent | TouchEvent;
+
+  constructor(private elementRef: ElementRef, private renderer: Renderer2) {
+    const dragStart$ = Observable.merge(
+      Observable.fromEvent(this.elementRef.nativeElement, 'mousedown'),
+      Observable.fromEvent(this.elementRef.nativeElement, 'touchstart'));
+    this.dragStartSubscription = dragStart$.subscribe((e: MouseEvent | TouchEvent) => {
+      this._onDragStart(e);
+    });
+
+    const dragging$ = Observable.merge(
+      Observable.fromEvent(document, 'mousemove'),
+      Observable.fromEvent(document, 'touchmove'));
+    this.dragSubscription = dragging$
+      .filter(_ => this._startEvent != null)
+      .subscribe((e: MouseEvent | TouchEvent) => {
+        this._onDragging(e);
+      });
+
+    const dragEnd$ = Observable.merge(
+      Observable.fromEvent(document, 'mouseup'),
+      Observable.fromEvent(document, 'touchend'));
+    this.dragEndSubscription = dragEnd$
+      .filter(_ => this._startEvent != null)
+      .subscribe((e: MouseEvent | TouchEvent) => {
+        this._onDragEnd(e);
+      });
+  }
+
+  ngOnDestroy() {
+    this.dragStartSubscription.unsubscribe();
+    this.dragSubscription.unsubscribe();
+    this.dragEndSubscription.unsubscribe();
+  }
 
   private _getParent() {
     return this.elementRef.nativeElement.parentNode.parentNode;
   }
 
-  @HostListener('mousedown', ['$event']) onMouseClick(e) {
-    this._onDragStart(e);
-  }
-
-  @HostListener('document:mousemove', ['$event']) onDocumentMouseMove(e) {
-    if (!this.startEvent) {
-      return;
-    }
-    this._onDragging(e);
-  }
-
-  @HostListener('document:mouseup', ['$event']) onMouseUp(e) {
-    this._onDragEnd(e);
-  }
-
-  private _onDragStart(e) {
-    this.startEvent = e;
+  private _onDragStart(e: MouseEvent | TouchEvent) {
+    this._startEvent = e;
     this.renderer.addClass(this.elementRef.nativeElement, 'dragging');
   }
 
-  private _onDragging(e) {
-    if (this.startEvent) {
-      this.onDrag.emit(this._getMove(e));
-    }
+  private _onDragging(e: MouseEvent | TouchEvent) {
+    this.onDrag.emit(this._calculatePosition(e));
   }
 
-  private _onDragEnd(e) {
-    this.startEvent = null;
+  private _onDragEnd(e: MouseEvent | TouchEvent) {
     this.renderer.removeClass(this.elementRef.nativeElement, 'dragging');
     this.onDragEnd.emit();
+    this._startEvent = null;
   }
 
-  private _getMove(e) {
-    let top = e.pageY - this.startEvent.pageY;
-    let left = e.pageX - this.startEvent.pageX;
+  private _getPosition(e: MouseEvent | TouchEvent): Position {
+    if (e instanceof MouseEvent) {
+      const event: MouseEvent = this._startEvent as MouseEvent;
+      return {
+        top: e.pageY - event.pageY,
+        left: e.pageX - event.pageX
+      };
+    } else if (e instanceof TouchEvent) {
+      const event = this._startEvent as TouchEvent;
+      return {
+        top: e.changedTouches[0].pageY - event.changedTouches[0].pageY,
+        left: e.changedTouches[0].pageX - event.changedTouches[0].pageX,
+      };
+    }
+  }
 
+  private _calculatePosition(e: MouseEvent | TouchEvent): Position {
+    const position: Position = this._getPosition(e);
     if (this.insideParent) {
-      const offsetTop = this.elementRef.nativeElement.offsetTop;
-      if (top + offsetTop < 0) {
-        top = 0;
+      // top
+      const elementOffsetTop = this.elementRef.nativeElement.offsetTop;
+      if (position.top + elementOffsetTop < 0) {
+        position.top = (elementOffsetTop * -1);
       }
-
-      const offsetHeight = this.elementRef.nativeElement.offsetHeight;
+      // bottom
+      const elementOffsetHeight = this.elementRef.nativeElement.offsetHeight + elementOffsetTop;
       const parentOffsetHeight = this._getParent().offsetHeight;
-      if (top + offsetHeight > parentOffsetHeight) {
-        top = parentOffsetHeight - offsetHeight;
+      if (position.top + elementOffsetHeight > parentOffsetHeight) {
+        position.top = parentOffsetHeight - elementOffsetHeight;
       }
-
-      const offsetLeft = this.elementRef.nativeElement.offsetLeft;
-      if (left + offsetLeft < 0) {
-        left = 0;
+      // left
+      const elementOffsetLeft = this.elementRef.nativeElement.offsetLeft;
+      if (position.left + elementOffsetLeft < 0) {
+        position.left = (elementOffsetLeft * -1);
       }
-
-      const offsetWidth = this.elementRef.nativeElement.offsetWidth;
+      // right
+      const elementOffsetWidth = this.elementRef.nativeElement.offsetWidth + elementOffsetLeft;
       const parentOffsetWidth = this._getParent().offsetWidth;
-      if (left + offsetWidth > parentOffsetWidth) {
-        left = parentOffsetWidth - offsetWidth;
+      if (position.left + elementOffsetWidth > parentOffsetWidth) {
+        position.left = parentOffsetWidth - elementOffsetWidth;
       }
     }
-
-    return <DragEvent>{
-      top: top,
-      left: left
-    };
+    return position;
   }
 }
 
-export interface DragEvent {
+export interface Position {
   top: number;
   left: number;
 }
