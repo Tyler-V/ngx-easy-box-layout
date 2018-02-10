@@ -15,7 +15,8 @@ export class DragDirective implements OnDestroy {
 
   @Input() movePadding = 50;
   @Input() insideParent = true;
-  @Output() onDrag = new EventEmitter<Position>();
+  @Output() onDragStart = new EventEmitter();
+  @Output() onDragging = new EventEmitter<Position>();
   @Output() onDragEnd = new EventEmitter();
 
   private dragStartSubscription: Subscription;
@@ -63,15 +64,14 @@ export class DragDirective implements OnDestroy {
 
   private _onDragStart(e: MouseEvent | TouchEvent) {
     this._startEvent = e;
-    this.renderer.addClass(this.elementRef.nativeElement, 'dragging');
+    this.onDragStart.emit();
   }
 
   private _onDragging(e: MouseEvent | TouchEvent) {
-    this.onDrag.emit(this._calculatePosition(e));
+    this.onDragging.emit(this._calculatePosition(e));
   }
 
   private _onDragEnd(e: MouseEvent | TouchEvent) {
-    this.renderer.removeClass(this.elementRef.nativeElement, 'dragging');
     this.onDragEnd.emit();
     this._startEvent = null;
   }
