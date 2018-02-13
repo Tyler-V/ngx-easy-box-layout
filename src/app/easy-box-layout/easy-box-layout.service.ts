@@ -1,17 +1,14 @@
-import { Injectable, EventEmitter, OnDestroy, ElementRef, ViewChildren, QueryList } from '@angular/core';
+import { Injectable, EventEmitter, OnDestroy, ElementRef } from '@angular/core';
 import { Subscription } from 'rxjs/Subscription';
-import { EasyGridBoxComponent } from './easy-grid-box/easy-grid-box.component';
 
 @Injectable()
-export class EasyGridLayoutService implements OnDestroy {
-
-  @ViewChildren('box') public components: QueryList<EasyGridBoxComponent>;
+export class EasyBoxLayoutService implements OnDestroy {
 
   public animation;
+  public lockInsideParent: boolean;
+  public containerRef: ElementRef;
   public calculateLayoutEvent = new EventEmitter<void>();
   public calculateLayoutSubscription: Subscription;
-
-  private container: ElementRef;
 
   constructor() {
     this.calculateLayoutSubscription = this.calculateLayoutEvent.subscribe(() => {

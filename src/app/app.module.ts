@@ -2,22 +2,22 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
-import { EasyGridLayoutComponent } from './easy-grid-layout/easy-grid-layout/easy-grid-layout.component';
-import { EasyGridBoxComponent } from './easy-grid-layout/easy-grid-box/easy-grid-box.component';
-import { DragDirective } from './easy-grid-layout/directives/drag.directive';
-import { EasyGridLayoutService } from './easy-grid-layout/easy-grid-layout.service';
+import { EasyBoxLayoutComponent } from './easy-box-layout/easy-box-layout/easy-box-layout.component';
+import { EasyBoxComponent } from './easy-box-layout/easy-box/easy-box.component';
+import { DragDirective } from './easy-box-layout/directives/drag.directive';
+import { EasyBoxLayoutService } from './easy-box-layout/easy-box-layout.service';
 
 @NgModule({
   declarations: [
     AppComponent,
-    EasyGridLayoutComponent,
-    EasyGridBoxComponent,
+    EasyBoxLayoutComponent,
+    EasyBoxComponent,
     DragDirective
   ],
   imports: [
     BrowserModule
   ],
-  providers: [EasyGridLayoutService],
+  providers: [EasyBoxLayoutService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
