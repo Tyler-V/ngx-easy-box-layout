@@ -1,0 +1,29 @@
+{
+    "files.exclude": {
+        "**/*.cmd": true,
+        "**/*.map": {
+            "when": "$(basename)"
+        },
+        "**/*.css": {
+            "when": "$(basename).less"
+        },
+        "**/*.js": {
+            "when": "$(basename).ts"
+        },
+        "**/*.js.map": true,
+        "**/npm-debug.log*": true,
+        "typings": true,
+        "**/*.spec.ts": true
+    },
+    "search.exclude": {
+        "**/*.css": true,
+        "**/*.js": true,
+        "**/*.js.map": true,
+        "**/cordova": true
+    },
+    "files.autoSave": "off",
+    "window.zoomLevel": 0,
+    "explorer.confirmDragAndDrop": false,
+    "extensions.autoUpdate": false,
+    "typescript.tsdk": "node_modules\\typescript\\lib"
+}
