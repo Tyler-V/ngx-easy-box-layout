@@ -2,6 +2,7 @@ import { Component, ElementRef, Input, OnInit, AfterContentInit, QueryList, Cont
 import { EasyBoxLayoutService } from '../easy-box-layout.service';
 import { EasyBoxComponent } from '../easy-box/easy-box.component';
 import { Utils, Format } from '../util/utils.class';
+import { Packer } from './packer/packer.class';
 
 @Component({
   selector: 'ez-box-layout',
@@ -32,6 +33,7 @@ export class EasyBoxLayoutComponent implements OnInit, AfterContentInit {
   ngAfterContentInit() {
     this.size();
     this.pack();
+    // this.gutter();
   }
 
   private size() {
@@ -42,56 +44,22 @@ export class EasyBoxLayoutComponent implements OnInit, AfterContentInit {
   }
 
   private pack() {
+    const packer: Packer = new Packer(this.containerWidth, this.containerHeight);
+    const boxes = [];
     this.boxes.forEach(box => {
-      box.heightPx = this.calcBoxHeight(box);
-      box.widthPx = this.calcBoxWidth(box);
-      this.position(box);
+      boxes.push({
+        width: box.widthPx,
+        height: box.heightPx
+      });
     });
-  }
-
-  private position(box: EasyBoxComponent) {
-    const boxes = this.boxes.filter(_ => _ !== box && _.leftPx !== undefined && _.topPx !== undefined);
-    if (boxes.length === 0) {
-      box.leftPx = box.topPx = 0;
-      return;
-    }
-    let left = 0, top = 0;
-    for (let i = 0; i < boxes.length; i++) {
-      const _box: EasyBoxComponent = boxes.find((item, index, array) => index === i);
-      left += box.widthPx + this.gutterPx;
-      // top += box.heightPx + this.gutterPx;
-    }
-    if (left > this.containerWidth) {
-      let height = Number.MAX_VALUE;
-      for (let i = 0; i < boxes.length; i++) {
-        const _box: EasyBoxComponent = boxes.find((item, index, array) => index === i);
-        if (_box.heightPx < height) {
-          // height = _box.heightPx; ?
-        }
-      }
-    }
-    box.leftPx = left;
-    box.topPx = top;
-  }
-
-  private pack2() {
-    let left = 0, top = 0, row = 0;
+    packer.pack(boxes);
     for (let i = 0; i < this.boxes.length; i++) {
       const box: EasyBoxComponent = this.boxes.find((item, index, array) => index === i);
-
-      box.leftPx = left;
-      box.topPx = top;
-      box.heightPx = this.calcBoxHeight(box);
-      box.widthPx = this.calcBoxWidth(box);
-
-      left += box.widthPx + this.gutterPx;
-
-      if (left >= this.containerWidth) {
-        left = 0;
-        top += box.heightPx + this.gutterPx;
-        row++;
-      }
+      const position = packer.packed[i];
+      box.leftPx = position.x;
+      box.topPx = position.y;
     }
+    console.log(packer);
   }
 
   private calcBoxWidth(box) {
@@ -125,7 +93,7 @@ export class EasyBoxLayoutComponent implements OnInit, AfterContentInit {
       case Format.Pixel:
         return Utils.getNumber(gutter);
       case Format.Number:
-        return Number(gutter);
+        return gutter ? Number(gutter) : 0;
     }
   }
 
