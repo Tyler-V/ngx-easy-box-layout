@@ -3,6 +3,7 @@ import { EasyBoxLayoutService } from '../easy-box-layout.service';
 import { EasyBoxComponent } from '../easy-box/easy-box.component';
 import { Utils, Format } from '../util/utils.class';
 import { Packer } from './packer/packer.class';
+import { Sorting } from './packer/sorting.class';
 
 @Component({
   selector: 'ez-box-layout',
@@ -19,6 +20,7 @@ export class EasyBoxLayoutComponent implements OnInit, AfterContentInit {
   private boxWidth: Map<string, number> = new Map<string, number>();
   private containerWidth: number;
   private containerHeight: number;
+  private sorting: Sorting = Sorting.Horizontal;
 
   constructor(private elementRef: ElementRef, private layoutService: EasyBoxLayoutService) { }
 
@@ -27,24 +29,23 @@ export class EasyBoxLayoutComponent implements OnInit, AfterContentInit {
     this.layoutService.containerRef = this.elementRef;
     this.containerWidth = Math.round(this.elementRef.nativeElement.clientWidth);
     this.containerHeight = Math.round(this.elementRef.nativeElement.clientHeight);
-    this.gutterPx = this.calcGutter(this.gutter);
+    this.gutterPx = this.getGutter(this.gutter);
   }
 
   ngAfterContentInit() {
     this.size();
     this.pack();
-    // this.gutter();
   }
 
   private size() {
     this.boxes.forEach(box => {
-      box.heightPx = this.calcBoxHeight(box);
-      box.widthPx = this.calcBoxWidth(box);
+      this.setBoxHeight(box);
+      this.setBoxWidth(box);
     });
   }
 
   private pack() {
-    const packer: Packer = new Packer(this.containerWidth, this.containerHeight);
+    const packer: Packer = new Packer(this.containerWidth, this.containerHeight, this.gutterPx, this.sorting);
     const boxes = [];
     this.boxes.forEach(box => {
       boxes.push({
@@ -55,38 +56,48 @@ export class EasyBoxLayoutComponent implements OnInit, AfterContentInit {
     packer.pack(boxes);
     for (let i = 0; i < this.boxes.length; i++) {
       const box: EasyBoxComponent = this.boxes.find((item, index, array) => index === i);
-      const position = packer.packed[i];
-      box.leftPx = position.x;
-      box.topPx = position.y;
+      const result = packer.packed[i];
+      if (result.packed) {
+        box.leftPx = result.x;
+        box.topPx = result.y;
+      } else {
+        box.visibility = 'hidden';
+      }
     }
     console.log(packer);
   }
 
-  private calcBoxWidth(box) {
+  private setBoxWidth(box: EasyBoxComponent) {
+    let widthPx;
     switch (Utils.getFormat(box.width)) {
       case Format.Percent:
         const percent = Utils.getNumber(box.width);
         const gutter = ((1 / percent) - 1) * this.gutterPx;
-        const width = (this.containerWidth - gutter) * percent;
-        return width;
+        widthPx = (this.containerWidth - gutter) * percent;
+        break;
       case Format.Pixel:
-        return parseInt(box.width, 10);
+        widthPx = parseInt(box.width, 10);
+        break;
     }
+    box.widthPx = widthPx;
   }
 
-  private calcBoxHeight(box) {
+  private setBoxHeight(box: EasyBoxComponent) {
+    let heightPx;
     switch (Utils.getFormat(box.height)) {
       case Format.Percent:
         const percent = Utils.getNumber(box.height);
         const gutter = ((1 / percent) - 1) * this.gutterPx;
-        const height = (this.containerHeight - gutter) * percent;
-        return height;
+        heightPx = (this.containerHeight - gutter) * percent;
+        break;
       case Format.Pixel:
-        return parseInt(box.height, 10);
+        heightPx = parseInt(box.height, 10) - this.gutterPx;
+        break;
     }
+    box.heightPx = heightPx;
   }
 
-  private calcGutter(gutter) {
+  private getGutter(gutter) {
     switch (Utils.getFormat(gutter)) {
       case Format.Percent:
         return this.containerWidth * Utils.getNumber(gutter);

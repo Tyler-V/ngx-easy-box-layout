@@ -23,6 +23,7 @@ export class EasyBoxComponent implements OnDestroy {
   @HostBinding('style.width.px') widthPx: number;
   @HostBinding('style.top.px') topPx: number;
   @HostBinding('style.left.px') leftPx: number;
+  @HostBinding('style.visibility') visibility = 'visible';
 
   private startEvent: MouseEvent | TouchEvent;
   private dragStartSubscription: Subscription;

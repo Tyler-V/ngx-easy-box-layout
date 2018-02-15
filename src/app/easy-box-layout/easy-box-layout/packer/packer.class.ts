@@ -1,15 +1,14 @@
 import { Box } from './box.class';
 import { Sorter, Sorting } from './sorting.class';
 
-/**
- * https://github.com/semibran/pack
-*/
 export class Packer {
     public packed: Array<Box> = [];
     public empty: Array<Box> = [];
     private sorting: Sorting;
+    private gutter: number;
 
-    constructor(width: number, height: number, sorting?: Sorting) {
+    constructor(width: number, height: number, gutter: number, sorting?: Sorting) {
+        this.gutter = gutter ? gutter : 0;
         this.sorting = sorting ? sorting : Sorting.Horizontal;
         this.empty = [{
             x: 0,
@@ -31,18 +30,19 @@ export class Packer {
     private _pack(box: Box) {
         this.empty.some(_box => {
             if (Box.boxFit(box, _box)) {
-                box.x = _box.x;
-                box.y = _box.y;
+                box.x = _box.x + (_box.x > 0 ? this.gutter : 0);
+                box.y = _box.y + (_box.y > 0 ? this.gutter : 0);
+                box.packed = true;
                 return true;
             }
             return false;
         });
 
-        if (box.x === undefined || box.y === undefined) {
+        this.packed.push(box);
+
+        if (!box.packed) {
             return false;
         }
-
-        this.packed.push(box);
 
         let new_empty: Array<Box> = [];
         this.empty.forEach(fit => {

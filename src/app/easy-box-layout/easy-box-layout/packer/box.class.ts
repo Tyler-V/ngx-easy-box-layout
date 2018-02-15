@@ -57,4 +57,5 @@ export interface Box {
     y?: number;
     width?: number;
     height?: number;
+    packed?: boolean;
 }
