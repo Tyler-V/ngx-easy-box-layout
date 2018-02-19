@@ -1,21 +1,22 @@
-import { Injectable, EventEmitter, OnDestroy, ElementRef } from '@angular/core';
+import { Injectable, EventEmitter, ElementRef } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 
 @Injectable()
-export class EasyBoxLayoutService implements OnDestroy {
+export class EasyBoxLayoutService {
 
-  public animation;
+  public animation = 1000;
   public lockInsideParent: boolean;
-  public containerRef: ElementRef;
-  public calculateLayoutEvent = new EventEmitter<void>();
-  public calculateLayoutSubscription: Subscription;
+  public resizeEvent = new EventEmitter<any>();
+  public repackEvent = new EventEmitter<any>();
+
+  private resizeSubscription: Subscription;
 
   constructor() {
-    this.calculateLayoutSubscription = this.calculateLayoutEvent.subscribe(() => {
-    });
-  }
-
-  ngOnDestroy() {
-    this.calculateLayoutSubscription.unsubscribe();
+    this.resizeSubscription = Observable.fromEvent(window, 'resize')
+      .subscribe(() => {
+        this.resizeEvent.emit();
+        this.repackEvent.emit();
+      });
   }
 }

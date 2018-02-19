@@ -53,9 +53,9 @@ export class Box {
 }
 
 export interface Box {
+    index?: number;
     x?: number;
     y?: number;
     width?: number;
     height?: number;
-    packed?: boolean;
 }

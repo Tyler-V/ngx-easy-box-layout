@@ -1,11 +1,12 @@
 import { Component, Input, Renderer2, ElementRef, ViewChild, HostBinding, OnDestroy } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
-import { Position } from './position';
+import { Position, ElementPosition } from './position.class';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/filter';
+import 'rxjs/add/operator/throttleTime';
 
 import { EasyBoxLayoutService } from '../easy-box-layout.service';
 
@@ -23,16 +24,18 @@ export class EasyBoxComponent implements OnDestroy {
   @HostBinding('style.width.px') widthPx: number;
   @HostBinding('style.top.px') topPx: number;
   @HostBinding('style.left.px') leftPx: number;
-  @HostBinding('style.visibility') visibility = 'visible';
+  @HostBinding('style.display') display: string;
 
+  public position: ElementPosition;
   private startEvent: MouseEvent | TouchEvent;
   private dragStartSubscription: Subscription;
   private dragSubscription: Subscription;
+  private reorderSubscription: Subscription;
   private dragEndSubscription: Subscription;
 
   constructor(
+    public elementRef: ElementRef,
     private layoutService: EasyBoxLayoutService,
-    private elementRef: ElementRef,
     private sanitizer: DomSanitizer,
     private renderer: Renderer2) {
     this.dragEvents();
@@ -41,6 +44,7 @@ export class EasyBoxComponent implements OnDestroy {
   ngOnDestroy() {
     this.dragStartSubscription.unsubscribe();
     this.dragSubscription.unsubscribe();
+    this.reorderSubscription.unsubscribe();
     this.dragEndSubscription.unsubscribe();
   }
 
@@ -52,12 +56,17 @@ export class EasyBoxComponent implements OnDestroy {
         this.startEvent = e;
         this.onDragStart(e);
       });
-    this.dragSubscription = Observable.merge(
+    const drag$: Observable<any> = Observable.merge(
       Observable.fromEvent(document, 'mousemove'),
       Observable.fromEvent(document, 'touchmove'))
-      .filter(_ => this.startEvent != null)
+      .filter(_ => this.startEvent != null);
+    this.dragSubscription = drag$
       .subscribe((e: MouseEvent | TouchEvent) => {
         this.onDragging(e);
+      });
+    this.reorderSubscription = drag$
+      .subscribe((e: MouseEvent | TouchEvent) => {
+        this.layoutService.repackEvent.emit(this.elementRef);
       });
     this.dragEndSubscription = Observable.merge(
       Observable.fromEvent(document, 'mouseup'),
@@ -74,8 +83,9 @@ export class EasyBoxComponent implements OnDestroy {
   }
 
   private onDragging(e: MouseEvent | TouchEvent) {
-    const position = this.calculatePosition(e);
-    this.renderer.setStyle(this.elementRef.nativeElement, 'transform', `translate3d(${position.left}px, ${position.top}px, 0)`);
+    this.position =
+      Position.calculate(e, this.startEvent, this.elementRef.nativeElement, this.layoutService.lockInsideParent);
+    this.renderer.setStyle(this.elementRef.nativeElement, 'transform', `translate3d(${this.position.left}px, ${this.position.top}px, 0)`);
   }
 
   private onDragEnd(e: MouseEvent | TouchEvent) {
@@ -84,51 +94,7 @@ export class EasyBoxComponent implements OnDestroy {
     setTimeout(() => {
       this.renderer.removeClass(this.elementRef.nativeElement, 'dragging');
       this.renderer.removeStyle(this.elementRef.nativeElement, 'transition');
+      this.layoutService.repackEvent.emit();
     }, this.layoutService.animation);
-  }
-
-  private getPosition(e: MouseEvent | TouchEvent): Position {
-    if (e instanceof MouseEvent) {
-      const event: MouseEvent = this.startEvent as MouseEvent;
-      return {
-        top: e.pageY - event.pageY,
-        left: e.pageX - event.pageX
-      };
-    } else if (e instanceof TouchEvent) {
-      const event = this.startEvent as TouchEvent;
-      return {
-        top: e.changedTouches[0].pageY - event.changedTouches[0].pageY,
-        left: e.changedTouches[0].pageX - event.changedTouches[0].pageX,
-      };
-    }
-  }
-
-  private calculatePosition(e: MouseEvent | TouchEvent): Position {
-    const position: Position = this.getPosition(e);
-    if (this.layoutService.lockInsideParent) {
-      // top
-      const elementOffsetTop = this.elementRef.nativeElement.offsetTop;
-      if (position.top + elementOffsetTop < 0) {
-        position.top = (elementOffsetTop * -1);
-      }
-      // bottom
-      const elementOffsetHeight = this.elementRef.nativeElement.offsetHeight + elementOffsetTop;
-      const parentOffsetHeight = this.layoutService.containerRef.nativeElement.offsetHeight;
-      if (position.top + elementOffsetHeight > parentOffsetHeight) {
-        position.top = parentOffsetHeight - elementOffsetHeight;
-      }
-      // left
-      const elementOffsetLeft = this.elementRef.nativeElement.offsetLeft;
-      if (position.left + elementOffsetLeft < 0) {
-        position.left = (elementOffsetLeft * -1);
-      }
-      // right
-      const elementOffsetWidth = this.elementRef.nativeElement.offsetWidth + elementOffsetLeft;
-      const parentOffsetWidth = this.layoutService.containerRef.nativeElement.offsetWidth;
-      if (position.left + elementOffsetWidth > parentOffsetWidth) {
-        position.left = parentOffsetWidth - elementOffsetWidth;
-      }
-    }
-    return position;
   }
 }
