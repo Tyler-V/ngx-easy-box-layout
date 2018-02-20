@@ -13,9 +13,10 @@ import { Box } from './packer/box.class';
   templateUrl: './easy-box-layout.component.html',
   styleUrls: ['./easy-box-layout.component.scss']
 })
-export class EasyBoxLayoutComponent implements AfterContentInit, OnDestroy {
+export class EasyBoxLayoutComponent implements OnInit, AfterContentInit, OnDestroy {
 
   @Input() gutter: string;
+  @Input() lock: boolean;
 
   @ContentChildren(EasyBoxComponent) boxes: QueryList<EasyBoxComponent>;
 
@@ -32,6 +33,10 @@ export class EasyBoxLayoutComponent implements AfterContentInit, OnDestroy {
       const box = this.boxes.find((item, index, array) => item.elementRef === el);
       this.pack(box);
     });
+  }
+
+  ngOnInit() {
+    this.layoutService.lock = this.lock;
   }
 
   ngAfterContentInit() {
@@ -51,7 +56,7 @@ export class EasyBoxLayoutComponent implements AfterContentInit, OnDestroy {
   }
 
   private pack(box?: EasyBoxComponent): void {
-    const packer: Packer = new Packer(this.getContainerWidth(), this.getContainerHeight(), this.getGutter(this.gutter), Sorting.Fit);
+    const packer: Packer = new Packer(this.getContainerWidth(), this.getContainerHeight(), this.getGutter(this.gutter), this.sorting);
     let i = 0;
     const boxes = [];
     this.boxes.forEach(_box => {

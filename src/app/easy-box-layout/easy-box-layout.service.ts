@@ -6,7 +6,7 @@ import { Subscription } from 'rxjs/Subscription';
 export class EasyBoxLayoutService {
 
   public animation = 1000;
-  public lockInsideParent: boolean;
+  public lock: boolean;
   public resizeEvent = new EventEmitter<any>();
   public repackEvent = new EventEmitter<any>();
 

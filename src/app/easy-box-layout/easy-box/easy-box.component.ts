@@ -85,7 +85,7 @@ export class EasyBoxComponent implements OnDestroy {
 
   private onDragging(e: MouseEvent | TouchEvent) {
     const position =
-      Position.calculate(e, this.startEvent, this.elementRef.nativeElement, this.layoutService.lockInsideParent);
+      Position.calculate(e, this.startEvent, this.elementRef.nativeElement, this.layoutService.lock);
     this.renderer.setStyle(this.elementRef.nativeElement, 'transform', `translate3d(${position.left}px, ${position.top}px, 0)`);
   }
 
