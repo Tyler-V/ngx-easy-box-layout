@@ -26,7 +26,8 @@ export class EasyBoxComponent implements OnDestroy {
   @HostBinding('style.left.px') leftPx: number;
   @HostBinding('style.display') display: string;
 
-  public position: ElementPosition;
+  public index: number;
+
   private startEvent: MouseEvent | TouchEvent;
   private dragStartSubscription: Subscription;
   private dragSubscription: Subscription;
@@ -83,18 +84,38 @@ export class EasyBoxComponent implements OnDestroy {
   }
 
   private onDragging(e: MouseEvent | TouchEvent) {
-    this.position =
+    const position =
       Position.calculate(e, this.startEvent, this.elementRef.nativeElement, this.layoutService.lockInsideParent);
-    this.renderer.setStyle(this.elementRef.nativeElement, 'transform', `translate3d(${this.position.left}px, ${this.position.top}px, 0)`);
+    this.renderer.setStyle(this.elementRef.nativeElement, 'transform', `translate3d(${position.left}px, ${position.top}px, 0)`);
   }
 
   private onDragEnd(e: MouseEvent | TouchEvent) {
+    const position = this.getPosition();
+    this.layoutService.repackEvent.emit(this.elementRef);
     this.renderer.removeStyle(this.elementRef.nativeElement, 'transform');
-    this.renderer.setStyle(this.elementRef.nativeElement, 'transition', `transform ${this.layoutService.animation}ms`);
-    setTimeout(() => {
-      this.renderer.removeClass(this.elementRef.nativeElement, 'dragging');
-      this.renderer.removeStyle(this.elementRef.nativeElement, 'transition');
-      this.layoutService.repackEvent.emit();
-    }, this.layoutService.animation);
+    this.renderer.removeClass(this.elementRef.nativeElement, 'dragging');
+    this.leftPx = position.left;
+    this.topPx = position.top;
+  }
+
+  public getPosition(): ElementPosition {
+    const transform = String(this.elementRef.nativeElement.style.transform);
+    if (!transform) {
+      return {
+        left: undefined,
+        top: undefined
+      };
+    }
+    const regex = /(-*\d+)px/g;
+    const matches: Array<string> = transform.match(regex);
+    const x = parseInt(matches[0], 10);
+    const y = parseInt(matches[1], 10);
+    const z = parseInt(matches[2], 10);
+    const position = {
+      left: this.leftPx + x,
+      top: this.topPx + y
+    };
+    console.log(position);
+    return position;
   }
 }

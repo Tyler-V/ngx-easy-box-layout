@@ -51,18 +51,21 @@ export class EasyBoxLayoutComponent implements AfterContentInit, OnDestroy {
   }
 
   private pack(box?: EasyBoxComponent): void {
-    const packer: Packer = new Packer(this.getContainerWidth(), this.getContainerHeight(), this.getGutter(this.gutter), this.sorting);
+    const packer: Packer = new Packer(this.getContainerWidth(), this.getContainerHeight(), this.getGutter(this.gutter), Sorting.Fit);
+    let i = 0;
     const boxes = [];
-    for (let i = 0; i < this.boxes.length; i++) {
-      const _box: EasyBoxComponent = this.boxes.find((item, index, array) => index === i);
+    this.boxes.forEach(_box => {
+      const position = _box.getPosition();
       boxes.push({
         index: i,
         width: _box.widthPx,
         height: _box.heightPx,
-        x: box === _box ? (_box.leftPx + _box.position.left) : undefined,
-        y: box === _box ? (_box.topPx + _box.position.top) : undefined
+        x: box === _box ? position.left : undefined,
+        y: box === _box ? position.top : undefined
       });
-    }
+      _box.index = i;
+      i++;
+    });
     packer.pack(boxes);
     packer.packed.forEach((result: Box) => {
       const _box: EasyBoxComponent = this.boxes.find((item, index, array) => index === result.index);
