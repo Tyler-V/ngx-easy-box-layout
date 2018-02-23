@@ -77,8 +77,10 @@ export class EasyBoxLayoutComponent implements OnInit, AfterContentInit, OnDestr
       const _component: EasyBoxComponent = this.boxes.find((component, index, array) => component == result.component);
       _component.index = result.index;
       if (component !== _component) {
-        _component.leftPx = result.x;
-        _component.topPx = result.y;
+        _component.position$.next({
+          left: result.x,
+          top: result.y
+        });
         _component.display = 'block';
       }
     }

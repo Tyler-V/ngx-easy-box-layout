@@ -3,6 +3,7 @@ import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browse
 import { Position, ElementPosition } from './position.class';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
+import { Subject } from "rxjs/Subject";
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/filter';
@@ -22,18 +23,20 @@ export class EasyBoxComponent implements OnDestroy {
 
   @HostBinding('style.height.px') heightPx: number;
   @HostBinding('style.width.px') widthPx: number;
-  @HostBinding('style.top.px') topPx: number;
   @HostBinding('style.left.px') leftPx: number;
+  @HostBinding('style.top.px') topPx: number;
   @HostBinding('style.display') display: string;
   @HostBinding('style.background-color') backgroundColor: string;
 
   public index: number;
+  public position$ = new Subject<ElementPosition>();
 
   private startEvent: MouseEvent | TouchEvent;
   private dragStartSubscription: Subscription;
   private dragSubscription: Subscription;
   private reorderSubscription: Subscription;
   private dragEndSubscription: Subscription;
+  private positionSubscription: Subscription;
 
   constructor(
     public elementRef: ElementRef,
@@ -42,6 +45,9 @@ export class EasyBoxComponent implements OnDestroy {
     private renderer: Renderer2) {
     this.dragEvents();
     this.backgroundColor = 'rgb(' + Math.round(Math.random() * 255) + ', ' + Math.round(Math.random() * 255) + ', ' + Math.round(Math.random() * 255) + ')';
+    this.position$.subscribe((position: ElementPosition) => {
+      this.animate(position);
+    });
   }
 
   ngOnDestroy() {
@@ -49,6 +55,7 @@ export class EasyBoxComponent implements OnDestroy {
     this.dragSubscription.unsubscribe();
     this.reorderSubscription.unsubscribe();
     this.dragEndSubscription.unsubscribe();
+    this.positionSubscription.unsubscribe();
   }
 
   private dragEvents() {
@@ -116,5 +123,21 @@ export class EasyBoxComponent implements OnDestroy {
       top: Math.min(this.topPx + y, this.elementRef.nativeElement.parentNode.offsetWidth)
     };
     return position;
+  }
+
+  public animate(position: ElementPosition) {
+    if (this.leftPx !== undefined && this.topPx !== undefined) {
+      this.leftPx = position.left;
+      this.topPx = position.top;
+    } else {
+      this.renderer.setStyle(this.elementRef.nativeElement, 'transition', `transform ${this.layoutService.animation}ms`);
+      this.renderer.setStyle(this.elementRef.nativeElement, 'transform', `translate3d(${position.left}px, ${position.top}px, 0)`);
+      setTimeout(() => {
+        this.renderer.removeStyle(this.elementRef.nativeElement, 'transition');
+        this.renderer.removeStyle(this.elementRef.nativeElement, 'transform');
+        this.leftPx = position.left;
+        this.topPx = position.top;
+      }, this.layoutService.animation);
+    }
   }
 }
