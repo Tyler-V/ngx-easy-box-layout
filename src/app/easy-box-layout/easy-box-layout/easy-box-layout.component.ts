@@ -49,44 +49,45 @@ export class EasyBoxLayoutComponent implements OnInit, AfterContentInit, OnDestr
   }
 
   private size() {
-    this.boxes.forEach(box => {
+    for (let i = 0; i < this.boxes.toArray().length; i++) {
+      const box: EasyBoxComponent = this.boxes.find((item, index, array) => index === i);
       this.setBoxHeight(box);
       this.setBoxWidth(box);
-    });
+      box.index = i;
+    }
   }
 
-  private pack(box?: EasyBoxComponent): void {
+  private pack(component?: EasyBoxComponent): void {
     const packer: Packer = new Packer(this.getContainerWidth(), this.getContainerHeight(), this.getGutter(this.gutter), this.sorting);
-    let i = 0;
     const boxes = [];
-    this.boxes.forEach(_box => {
-      const position = _box.getPosition();
+    this.boxes.forEach(_component => {
+      const _position = _component.getPosition();
       boxes.push({
-        index: i,
-        width: _box.widthPx,
-        height: _box.heightPx,
-        x: box === _box ? position.left : undefined,
-        y: box === _box ? position.top : undefined
+        component: _component,
+        index: _component.index,
+        width: _component.widthPx,
+        height: _component.heightPx,
+        x: component === _component ? _position.left : undefined,
+        y: component === _component ? _position.top : undefined
       });
-      _box.index = i;
-      i++;
     });
     packer.pack(boxes);
-    packer.packed.forEach((result: Box) => {
-      const _box: EasyBoxComponent = this.boxes.find((item, index, array) => index === result.index);
-      if (_box !== box) {
-        _box.leftPx = result.x;
-        _box.topPx = result.y;
-        _box.display = 'block';
+    for (let i = 0; i < packer.packed.length; i++) {
+      const result = packer.packed[i];
+      const _component: EasyBoxComponent = this.boxes.find((component, index, array) => component == result.component);
+      _component.index = result.index;
+      if (component !== _component) {
+        _component.leftPx = result.x;
+        _component.topPx = result.y;
+        _component.display = 'block';
       }
-    });
+    }
     packer.unpacked.forEach((result: Box) => {
-      const _box: EasyBoxComponent = this.boxes.find((item, index, array) => index === result.index);
-      if (_box !== box) {
-        _box.display = 'none';
+      const _component: EasyBoxComponent = this.boxes.find((component, index, array) => component == result.component);
+      if (component !== _component) {
+        _component.display = 'none';
       }
     });
-    // console.log(packer);
   }
 
   private setBoxWidth(box: EasyBoxComponent): void {

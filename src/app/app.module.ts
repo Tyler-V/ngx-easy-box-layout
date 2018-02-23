@@ -17,7 +17,9 @@ import { EasyBoxLayoutService } from './easy-box-layout/easy-box-layout.service'
   imports: [
     BrowserModule
   ],
-  providers: [EasyBoxLayoutService],
+  providers: [
+    EasyBoxLayoutService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

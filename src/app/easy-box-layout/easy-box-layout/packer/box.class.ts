@@ -53,9 +53,11 @@ export class Box {
 }
 
 export interface Box {
+    component?: any,
     index?: number;
-    x?: number;
-    y?: number;
     width?: number;
     height?: number;
+    x?: number;
+    y?: number;
+    position?: number;
 }

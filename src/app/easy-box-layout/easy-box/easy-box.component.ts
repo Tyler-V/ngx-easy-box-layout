@@ -6,7 +6,7 @@ import { Subscription } from 'rxjs/Subscription';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/filter';
-import 'rxjs/add/operator/throttleTime';
+import 'rxjs/add/operator/debounceTime';
 
 import { EasyBoxLayoutService } from '../easy-box-layout.service';
 
@@ -25,6 +25,7 @@ export class EasyBoxComponent implements OnDestroy {
   @HostBinding('style.top.px') topPx: number;
   @HostBinding('style.left.px') leftPx: number;
   @HostBinding('style.display') display: string;
+  @HostBinding('style.background-color') backgroundColor: string;
 
   public index: number;
 
@@ -40,6 +41,7 @@ export class EasyBoxComponent implements OnDestroy {
     private sanitizer: DomSanitizer,
     private renderer: Renderer2) {
     this.dragEvents();
+    this.backgroundColor = 'rgb(' + Math.round(Math.random() * 255) + ', ' + Math.round(Math.random() * 255) + ', ' + Math.round(Math.random() * 255) + ')';
   }
 
   ngOnDestroy() {
@@ -66,6 +68,7 @@ export class EasyBoxComponent implements OnDestroy {
         this.onDragging(e);
       });
     this.reorderSubscription = drag$
+      .debounceTime(25)
       .subscribe((e: MouseEvent | TouchEvent) => {
         this.layoutService.repackEvent.emit(this.elementRef);
       });
@@ -90,12 +93,9 @@ export class EasyBoxComponent implements OnDestroy {
   }
 
   private onDragEnd(e: MouseEvent | TouchEvent) {
-    const position = this.getPosition();
-    this.layoutService.repackEvent.emit(this.elementRef);
+    this.layoutService.repackEvent.emit();
     this.renderer.removeStyle(this.elementRef.nativeElement, 'transform');
     this.renderer.removeClass(this.elementRef.nativeElement, 'dragging');
-    this.leftPx = position.left;
-    this.topPx = position.top;
   }
 
   public getPosition(): ElementPosition {
@@ -112,10 +112,9 @@ export class EasyBoxComponent implements OnDestroy {
     const y = parseInt(matches[1], 10);
     const z = parseInt(matches[2], 10);
     const position = {
-      left: this.leftPx + x,
-      top: this.topPx + y
+      left: Math.max(this.leftPx + x, 0),
+      top: Math.min(this.topPx + y, this.elementRef.nativeElement.parentNode.offsetWidth)
     };
-    console.log(position);
     return position;
   }
 }

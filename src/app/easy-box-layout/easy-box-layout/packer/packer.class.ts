@@ -24,16 +24,41 @@ export class Packer {
     }
 
     public pack(boxes: Array<Box>) {
-        if (!(boxes instanceof Array)) {
-            return this._pack(boxes);
-        }
-        boxes = boxes.filter((a: Box) => {
-            return a.x !== undefined && a.y !== undefined;
-        }).concat(boxes.filter((b: Box) => {
-            return b.x === undefined && b.y === undefined;
-        }));
-        return boxes.map(box => {
+        // sort
+        boxes.sort((a: Box, b: Box) => {
+            if (a.index < b.index) {
+                if (b.x !== undefined && b.y !== undefined) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            } else {
+                if (a.x !== undefined && a.y !== undefined) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            }
+        });
+        // pack
+        boxes.map(box => {
             return this._pack(box) || box;
+        })        
+        // order results
+        boxes.sort((a: Box, b: Box) => {
+            if (a.y < b.y) {
+                return -1;
+            }
+            if (a.y == b.y) {
+                if (a.x < b.x) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            }
+            return 1;
+        }).map((box, index, array) => {
+            box.index = index;
         });
     }
 
