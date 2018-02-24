@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs/Subscription';
 @Injectable()
 export class EasyBoxLayoutService {
 
-  public animation = 1000;
+  public animation = 500;
   public lock: boolean;
   public resizeEvent = new EventEmitter<any>();
   public repackEvent = new EventEmitter<any>();

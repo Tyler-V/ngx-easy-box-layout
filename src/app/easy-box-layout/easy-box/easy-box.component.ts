@@ -31,6 +31,7 @@ export class EasyBoxComponent implements OnDestroy {
   public index: number;
   public position$ = new Subject<ElementPosition>();
 
+  private animationTimeout;
   private startEvent: MouseEvent | TouchEvent;
   private dragStartSubscription: Subscription;
   private dragSubscription: Subscription;
@@ -56,6 +57,27 @@ export class EasyBoxComponent implements OnDestroy {
     this.reorderSubscription.unsubscribe();
     this.dragEndSubscription.unsubscribe();
     this.positionSubscription.unsubscribe();
+  }
+
+  public animate(position: ElementPosition) {
+    if (this.leftPx === undefined && this.topPx === undefined) {
+      this.leftPx = position.left;
+      this.topPx = position.top;
+    } else {
+      if (this.animationTimeout) {
+        clearTimeout(this.animationTimeout);
+      }
+      let left = position.left - (this.leftPx !== undefined ? this.leftPx : 0);
+      let top = position.top - (this.topPx !== undefined ? this.topPx : 0);
+      this.renderer.setStyle(this.elementRef.nativeElement, 'transition', `transform ${this.layoutService.animation}ms ease-out`);
+      this.renderer.setStyle(this.elementRef.nativeElement, 'transform', `translate3d(${left}px, ${top}px, 0)`);
+      this.animationTimeout = setTimeout(() => {
+        this.renderer.removeStyle(this.elementRef.nativeElement, 'transition');
+        this.renderer.removeStyle(this.elementRef.nativeElement, 'transform');
+        this.leftPx = position.left;
+        this.topPx = position.top;
+      }, this.layoutService.animation);
+    }
   }
 
   private dragEvents() {
@@ -100,9 +122,8 @@ export class EasyBoxComponent implements OnDestroy {
   }
 
   private onDragEnd(e: MouseEvent | TouchEvent) {
-    this.layoutService.repackEvent.emit();
-    this.renderer.removeStyle(this.elementRef.nativeElement, 'transform');
     this.renderer.removeClass(this.elementRef.nativeElement, 'dragging');
+    this.layoutService.repackEvent.emit();
   }
 
   public getPosition(): ElementPosition {
@@ -123,21 +144,5 @@ export class EasyBoxComponent implements OnDestroy {
       top: Math.min(this.topPx + y, this.elementRef.nativeElement.parentNode.offsetWidth)
     };
     return position;
-  }
-
-  public animate(position: ElementPosition) {
-    if (this.leftPx !== undefined && this.topPx !== undefined) {
-      this.leftPx = position.left;
-      this.topPx = position.top;
-    } else {
-      this.renderer.setStyle(this.elementRef.nativeElement, 'transition', `transform ${this.layoutService.animation}ms`);
-      this.renderer.setStyle(this.elementRef.nativeElement, 'transform', `translate3d(${position.left}px, ${position.top}px, 0)`);
-      setTimeout(() => {
-        this.renderer.removeStyle(this.elementRef.nativeElement, 'transition');
-        this.renderer.removeStyle(this.elementRef.nativeElement, 'transform');
-        this.leftPx = position.left;
-        this.topPx = position.top;
-      }, this.layoutService.animation);
-    }
   }
 }
