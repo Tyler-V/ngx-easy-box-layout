@@ -36,7 +36,7 @@ export class EasyBoxLayoutComponent implements OnInit, AfterContentInit, OnDestr
   }
 
   ngOnInit() {
-    this.layoutService.lock = this.lock;
+    this.layoutService.lock = String(this.lock) === 'true';
   }
 
   ngAfterContentInit() {
@@ -62,6 +62,13 @@ export class EasyBoxLayoutComponent implements OnInit, AfterContentInit, OnDestr
     const boxes = [];
     this.boxes.forEach(_component => {
       const _position = _component.getPosition();
+      if (_position.left !== undefined) {
+        let _containerWidth = this.getContainerWidth();
+        if (_position.left + _component.widthPx > _containerWidth) {
+          _position.left = _containerWidth - _component.widthPx;
+        }
+        _position.top = Math.min(Math.max(0, _position.top), this.getContainerHeight());
+      }
       boxes.push({
         component: _component,
         index: _component.index,
