@@ -97,7 +97,7 @@ export class EasyBoxComponent implements OnDestroy {
         this.onDragging(e);
       });
     this.reorderSubscription = drag$
-      .debounceTime(25)
+      .debounceTime(50)
       .subscribe((e: MouseEvent | TouchEvent) => {
         this.layoutService.repackEvent.emit(this.elementRef);
       });
@@ -122,8 +122,10 @@ export class EasyBoxComponent implements OnDestroy {
   }
 
   private onDragEnd(e: MouseEvent | TouchEvent) {
-    this.renderer.removeClass(this.elementRef.nativeElement, 'dragging');
     this.layoutService.repackEvent.emit();
+    setTimeout(() => {
+      this.renderer.removeClass(this.elementRef.nativeElement, 'dragging');
+    }, this.layoutService.animation);
   }
 
   public getPosition(): ElementPosition {
